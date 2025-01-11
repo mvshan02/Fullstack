@@ -23,10 +23,12 @@ public class UserDetailsServiceImpl implements org.springframework.security.core
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Convert roles (Set<String>) to GrantedAuthority objects
+
+        // Convert roles (Set<Role>) to GrantedAuthority objects
         Set<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(SimpleGrantedAuthority::new)
+                .map(role -> new SimpleGrantedAuthority(role.getRole())) // Extract role name
                 .collect(Collectors.toSet());
+
 
         // Create and return UserDetails
         return org.springframework.security.core.userdetails.User

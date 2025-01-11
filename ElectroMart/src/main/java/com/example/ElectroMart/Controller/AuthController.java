@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Map;
 
 @RestController
@@ -36,15 +38,21 @@ public class AuthController {
                 String token = jwtUtil.generateToken(user.getEmail());
                 return ResponseEntity.ok(Map.of("token", token));
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+
+            } catch (BadCredentialsException e) {
+                // Log and return specific error for bad credentials
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid email or password");
+            } catch (Exception e) {
+                // Log and return generic error for other exceptions
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: Something went wrong");
+            }
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
+    public ResponseEntity<String> register(@Valid @RequestBody User user) {
         try {
             userService.saveUser(user);
             return ResponseEntity.ok("User registered successfully");
