@@ -10,6 +10,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -19,6 +23,20 @@ public class SecurityConfig {
     public SecurityConfig(@Lazy JwtAuthorizationFilter jwtAuthorizationFilter) {
         this.jwtAuthorizationFilter = jwtAuthorizationFilter;
     }
+
+    @Bean
+    public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        firewall.setAllowUrlEncodedSlash(true);
+        firewall.setAllowUrlEncodedPercent(true);
+        firewall.setAllowSemicolon(true);
+        firewall.setAllowBackSlash(true);
+        firewall.setAllowUrlEncodedDoubleSlash(true);
+        firewall.setAllowUrlEncodedPercent(true);
+        firewall.setAllowedHttpMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD")); // Allow all standard HTTP methods
+        return firewall;
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,10 +55,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless REST APIs
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Public endpoints
-                        .anyRequest().authenticated() // Secured endpoints
+                        .anyRequest().authenticated() // Secure other endpoints
                 )
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter
-                .httpBasic(httpBasic -> httpBasic.disable()); // Configure HTTP Basic authentication
+                .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP Basic auth
+                .setSharedObject(HttpFirewall.class, allowUrlEncodedSlashHttpFirewall()); // Apply custom firewall
         return http.build();
     }
+
 }
