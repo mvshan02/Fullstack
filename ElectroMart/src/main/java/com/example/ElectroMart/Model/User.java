@@ -2,11 +2,17 @@ package com.example.ElectroMart.Model;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.Collections;
 import java.util.Set;
 
 @Document(collection = "users")
+
 public class User {
     @Id
     private String id;
@@ -16,9 +22,11 @@ public class User {
     private String email;
 
     @NotEmpty(message = "Password is required")
+    @Size(min = 6)
     private String password;
 
-    private Set<String> roles;
+    @DBRef
+    private Set<Role> roles ;
 
     // Getters and Setters
     public String getId() {
@@ -45,11 +53,11 @@ public class User {
         this.password = password;
     }
 
-    public Set<String> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<String> roles) {
+    public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
 }
