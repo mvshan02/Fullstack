@@ -1,46 +1,80 @@
 package com.example.ElectroMart.Service;
 
-import com.example.ElectroMart.Model.Seller;
-import com.example.ElectroMart.Repository.SellerRepository;
+import com.example.ElectroMart.Model.Product;
+import com.example.ElectroMart.Model.Role;
+import com.example.ElectroMart.Model.User;
+import com.example.ElectroMart.Repository.ProductRepository;
+import com.example.ElectroMart.Repository.RoleRepository;
+import com.example.ElectroMart.Repository.UserRepository;
+import com.example.ElectroMart.Security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SellerService {
 
     @Autowired
-    private SellerRepository sellerRepository;
+    private UserRepository userRepository;
 
-    public Seller addSeller(Seller seller) {
-        return sellerRepository.save(seller);
-    }
+    @Autowired
+    private RoleRepository roleRepository;
 
-    public List<Seller> getAllSellers() {
-        return sellerRepository.findAll();
-    }
+    @Autowired
+    private ProductRepository productRepository;
 
-    public Seller getSellerById(String id) {
-        return sellerRepository.findById(id).orElse(null);
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    public Seller getSellerByEmail(String email) {
-        return sellerRepository.findByEmail(email);
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    public Seller updateSeller(String id, Seller updatedSeller) {
-        Seller existingSeller = sellerRepository.findById(id).orElse(null);
-        if (existingSeller != null) {
-            existingSeller.setName(updatedSeller.getName());
-            existingSeller.setShopName(updatedSeller.getShopName());
-            existingSeller.setAddress(updatedSeller.getAddress());
-            return sellerRepository.save(existingSeller);
+    public void registerSeller(User seller) {
+        if (userRepository.findByEmail(seller.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists!");
         }
-        return null;
+
+        Role sellerRole = roleRepository.findByRole("ROLE_SELLER").orElseThrow(() ->
+                new IllegalArgumentException("Role not found"));
+        seller.setRoles(Set.of(sellerRole));
+        seller.setPassword(passwordEncoder.encode(seller.getPassword()));
+
+        userRepository.save(seller);
     }
 
-    public void deleteSeller(String id) {
-        sellerRepository.deleteById(id);
+    public String loginSeller(String email, String password) {
+        User seller = userRepository.findByEmail(email).orElseThrow(() ->
+                new IllegalArgumentException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(password, seller.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+        List<String> roleNames = seller.getRoles().stream()
+                .map(Role::getRole) // Extract role names
+                .toList();
+
+
+
+        return jwtUtil.generateToken(seller.getEmail(), roleNames);
+    }
+
+    public void addProduct(Product product) {
+        String currentSellerEmail = jwtUtil.extractUsernameFromSecurityContext();
+        User seller = userRepository.findByEmail(currentSellerEmail).orElseThrow(() ->
+                new IllegalArgumentException("Seller not found"));
+
+        product.setSeller(seller);
+        productRepository.save(product);
+    }
+
+    public Object getDashboard() {
+        String currentSellerEmail = jwtUtil.extractUsernameFromSecurityContext();
+        User seller = userRepository.findByEmail(currentSellerEmail).orElseThrow(() ->
+                new IllegalArgumentException("Seller not found"));
+
+        return productRepository.findById(seller.getId());
     }
 }

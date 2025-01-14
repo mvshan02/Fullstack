@@ -4,101 +4,89 @@ import com.example.ElectroMart.Model.Role;
 import com.example.ElectroMart.Model.User;
 import com.example.ElectroMart.Repository.RoleRepository;
 import com.example.ElectroMart.Repository.UserRepository;
+import com.example.ElectroMart.Security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.*;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+
+
 
 @Service
 public class UserService {
-
-    private final RoleRepository roleRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private MongoTemplate mongoTemplate;
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    @Autowired
+    private JwtUtil jwtUtil;
 
-
-
-
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-    // Add a new user using MongoTemplate (if not already present)
-    public void registerUser(User user) {
-
-        if (!EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
-            throw new IllegalArgumentException("Invalid email format");
+    @PostMapping("/api/auth/register")
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("Email is already in use");
         }
-        // Check if the user already exists
-        Query query = new Query();
-        query.addCriteria(Criteria.where("email").is(user.getEmail()));
 
-        if (mongoTemplate.exists(query, User.class)) {
-            throw new RuntimeException("Email is already registered");
-        }
+
+        // Encrypt the password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-
-        // Save the user
-        mongoTemplate.save(user);
-    }
-
-    // Add a new user using UserRepository
-
-
-    public User saveUser(User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new RuntimeException("User with email " + user.getEmail() + " already exists");
-        }
-        // Assign default role if no roles are provided
+        // Check if roles are provided; if not, assign ROLE_USER by default
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Optional<Role> defaultRole = roleRepository.findByRole("ROLE_USER");
-            if (!defaultRole.isPresent()) {
-                throw new RuntimeException("Default role 'ROLE_USER' not found in the database");
-            }
-
-            Set<Role> roles = new HashSet<>();
-            roles.add(defaultRole.get());
-            user.setRoles(roles);
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        return userRepository.save(user);
-    }
-    // Get all users
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    // Get a user by ID
-    public User getUserById(String id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-    }
-
-    // Delete a user by ID
-    public void deleteUserById(String id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
+            Role defaultRole = roleRepository.findByRole("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+            user.setRoles(Set.of(defaultRole));
         } else {
-            throw new RuntimeException("User not found with id: " + id);
+            // Map provided role names to Role objects
+            Set<Role> assignedRoles = new HashSet<>();
+            for (Role role : user.getRoles()) {
+                Role dbRole = roleRepository.findByRole(role.getRole())
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + role.getRole()));
+                assignedRoles.add(dbRole);
+            }
+            user.setRoles(assignedRoles);
         }
+
+        userRepository.save(user);
+        return ResponseEntity.ok("User registered successfully");
+
+
+    }
+
+
+
+    public String loginUser(String email, String password) {
+        User user = userRepository.findByEmail(email).orElseThrow(() ->
+                new IllegalArgumentException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getRole) // Extract role names
+                .toList();
+
+
+        return jwtUtil.generateToken(user.getEmail(), roleNames);
+    }
+
+    public User getUserProfile() {
+        String currentUserEmail = jwtUtil.extractUsernameFromSecurityContext();
+        return userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

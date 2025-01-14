@@ -1,11 +1,12 @@
 package com.example.ElectroMart.Controller;
 
-import com.example.ElectroMart.Model.Seller;
+import com.example.ElectroMart.Model.Product;
+import com.example.ElectroMart.Model.User;
 import com.example.ElectroMart.Service.SellerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/sellers")
@@ -15,32 +16,41 @@ public class SellerController {
     private SellerService sellerService;
 
     @PostMapping("/register")
-    public Seller registerSeller(@RequestBody Seller seller) {
-        return sellerService.addSeller(seller);
+    public ResponseEntity<?> registerSeller(@RequestBody User seller) {
+        try {
+            sellerService.registerSeller(seller);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Seller registered successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
     }
 
-    @GetMapping
-    public List<Seller> getAllSellers() {
-        return sellerService.getAllSellers();
+    @PostMapping("/login")
+    public ResponseEntity<?> loginSeller(@RequestParam String email, @RequestParam String password) {
+        try {
+            String token = sellerService.loginSeller(email, password);
+            return ResponseEntity.ok().body(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/{id}")
-    public Seller getSellerById(@PathVariable String id) {
-        return sellerService.getSellerById(id);
+    @PostMapping("/products")
+    public ResponseEntity<?> addProduct(@RequestBody Product product) {
+        try {
+            sellerService.addProduct(product);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Product added successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/email/{email}")
-    public Seller getSellerByEmail(@PathVariable String email) {
-        return sellerService.getSellerByEmail(email);
-    }
-
-    @PutMapping("/{id}")
-    public Seller updateSeller(@PathVariable String id, @RequestBody Seller updatedSeller) {
-        return sellerService.updateSeller(id, updatedSeller);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteSeller(@PathVariable String id) {
-        sellerService.deleteSeller(id);
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getSellerDashboard() {
+        try {
+            return ResponseEntity.ok(sellerService.getDashboard());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
     }
 }

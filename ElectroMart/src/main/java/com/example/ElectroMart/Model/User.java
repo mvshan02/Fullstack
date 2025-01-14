@@ -8,12 +8,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Document(collection = "users")
-
 public class User {
+
     @Id
     private String id;
 
@@ -22,11 +24,40 @@ public class User {
     private String email;
 
     @NotEmpty(message = "Password is required")
-    @Size(min = 6)
+    @Size(min = 6, message = "Password must have at least 6 characters")
     private String password;
 
+    @NotEmpty(message = "Username is required")
+    private String userName;
+
     @DBRef
-    private Set<Role> roles ;
+    private Set<Role> roles  = new HashSet<>();; // Roles assigned to the user
+
+    // Additional fields for all users
+    private String phoneNumber;
+    private String address;
+    private String profileImageUrl; // URL to the profile image
+    private boolean active = true; // Account status
+    private LocalDateTime createdAt = LocalDateTime.now(); // Account creation timestamp
+    private LocalDateTime lastLogin; // Last login timestamp
+
+    // Seller-specific fields
+//    private boolean isSeller = false; // Whether the user is a seller
+    private String shopName; // Seller's shop name
+    private String gstNumber; // GST number for sellers
+
+    // Admin-specific fields
+//    private boolean isAdmin = false; // Whether the user is an admin
+
+    // Constructors
+    public User() {}
+
+    public User(String email, String password, String userName, Set<Role> roles) {
+        this.email = email;
+        this.password = password;
+        this.userName = userName;
+        this.roles = roles;
+    }
 
     // Getters and Setters
     public String getId() {
@@ -53,11 +84,104 @@ public class User {
         this.password = password;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
     public Set<Role> getRoles() {
         return roles;
     }
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+//    public boolean isSeller() {
+//        return isSeller;
+//    }
+//
+//    public void setSeller(boolean seller) {
+//        isSeller = seller;
+//    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
+    }
+
+    public String getGstNumber() {
+        return gstNumber;
+    }
+
+    public void setGstNumber(String gstNumber) {
+        this.gstNumber = gstNumber;
+    }
+
+//    public boolean isAdmin() {
+//        return isAdmin;
+//    }
+//
+//    public void setAdmin(boolean admin) {
+//        isAdmin = admin;
+//    }
+
+    // Helper methods
+    public boolean hasRole(String roleName) {
+        return roles.stream().anyMatch(role -> role.getRole().equals(roleName));
     }
 }

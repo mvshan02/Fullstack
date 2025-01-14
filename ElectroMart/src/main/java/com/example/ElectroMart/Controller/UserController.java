@@ -3,37 +3,44 @@ package com.example.ElectroMart.Controller;
 import com.example.ElectroMart.Model.User;
 import com.example.ElectroMart.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
     @Autowired
     private UserService userService;
 
-    // Register a new user
     @PostMapping("/register")
-    public User registerUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        try {
+            userService.registerUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
     }
 
-    // Get all users
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestParam String email, @RequestParam String password) {
+        try {
+            String token = userService.loginUser(email, password);
+            return ResponseEntity.ok().body(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed: " + e.getMessage());
+        }
     }
 
-    // Get a user by ID
-    @GetMapping("/{id}")
-    public User getUserById(@PathVariable String id) {
-        return userService.getUserById(id);
-    }
-
-    // Delete a user
-    @DeleteMapping("/{id}")
-    public void deleteUserById(@PathVariable String id) {
-        userService.deleteUserById(id);
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile() {
+        try {
+            User user = userService.getUserProfile();
+            return ResponseEntity.ok().body(user);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
     }
 }
