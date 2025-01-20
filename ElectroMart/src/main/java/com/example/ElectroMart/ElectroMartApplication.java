@@ -12,6 +12,7 @@ public class ElectroMartApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ElectroMartApplication.class, args);
+		
 	}
 
 

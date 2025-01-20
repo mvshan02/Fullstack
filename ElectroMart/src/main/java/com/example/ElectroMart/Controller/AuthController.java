@@ -18,6 +18,7 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:5175")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -61,6 +62,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody User user) {
+        System.out.println("Received user data: " + user.toString());
+
         try {
             userService.registerUser(user);
             return ResponseEntity.ok("User registered successfully");
