@@ -1,9 +1,8 @@
 package com.example.ElectroMart.Controller;
 
-import com.example.ElectroMart.Model.User;
 import com.example.ElectroMart.Model.Role;
+import com.example.ElectroMart.Model.User;
 import com.example.ElectroMart.Security.JwtUtil;
-import com.example.ElectroMart.Service.AuthService;
 import com.example.ElectroMart.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,7 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5175")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -33,21 +32,44 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+
         try {
+            // Extract login details
+            String email = loginRequest.get("email");
+            String password = loginRequest.get("password");
+            String requestedRole = loginRequest.get("requestedRole"); // Fix: Extract requested role
+
+            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
+                    new UsernamePasswordAuthenticationToken(email, password)
             );
+
+
             if (authentication.isAuthenticated()) {
-                List<String> roleNames = user.getRoles().stream()
+                User dbUser = userService.getUserByEmail(email);
+                List<String> roleNames = dbUser.getRoles().stream()
                         .map(Role::getRole) // Extract role names
                         .toList();
 
+                // Validate role-based login attempt
+                if ("seller".equalsIgnoreCase(requestedRole) && !roleNames.contains("ROLE_SELLER")) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("Error: You are not registered as a seller.");
+                }
 
-                String token =  jwtUtil.generateToken(user.getEmail(), roleNames);
+                if ("buyer".equalsIgnoreCase(requestedRole) && !roleNames.contains("ROLE_BUYER")) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("Error: You are not registered as a buyer.");
+                }
+
+
+
+                String token =  jwtUtil.generateToken(dbUser.getEmail(), roleNames);
                 return ResponseEntity.ok(Map.of("token", token));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+
 
         } catch (BadCredentialsException e) {
             // Log and return specific error for bad credentials
@@ -60,29 +82,26 @@ public class AuthController {
     }
 
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody User user) {
-        System.out.println("Received user data: " + user.toString());
-
-        try {
-            userService.registerUser(user);
-            return ResponseEntity.ok("User registered successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
-        }
-    }
-//@PostMapping("/register/user")
-//public ResponseEntity<String> registerUser(@RequestBody RegisterRequest request) {
-//    authService.register(request, "ROLE_USER");
-//    return ResponseEntity.ok("User registered successfully!");
-//}
+//    @PostMapping("/register")
+//    public ResponseEntity<String> register(@Valid @RequestBody User user) {
+//        System.out.println("Received user data: " + user.toString());
 //
-//    // Endpoint to register a SELLER
-//    @PostMapping("/register/seller")
-//    public ResponseEntity<String> registerSeller(@RequestBody RegisterRequest request) {
-//        AuthService.register(request, "ROLE_SELLER");
-//        return ResponseEntity.ok("Seller registered successfully!");
+//        try {
+//            userService.registerUser(user);
+//            return ResponseEntity.ok("User registered successfully");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+//        }
 //    }
+    @PostMapping("/register/user")
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        return userService.registerUser(user, "ROLE_USER");
+    }
+
+    @PostMapping("/register/seller")
+    public ResponseEntity<?> registerSeller(@RequestBody User user) {
+        return userService.registerUser(user, "ROLE_SELLER");
+    }
 ////
 //    // Endpoint to register an ADMIN
 //    @PostMapping("/register/admin")

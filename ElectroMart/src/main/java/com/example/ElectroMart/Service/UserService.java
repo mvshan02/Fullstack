@@ -7,6 +7,7 @@ import com.example.ElectroMart.Repository.UserRepository;
 import com.example.ElectroMart.Security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,36 +37,53 @@ public class UserService {
     private JwtUtil jwtUtil;
 
     @PostMapping("/api/auth/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public ResponseEntity<?> registerUser(User user, String roleName) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email is already in use");
         }
 
-
         // Encrypt the password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Check if roles are provided; if not, assign ROLE_USER by default
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findByRole("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("Default role not found"));
-            user.setRoles(Set.of(defaultRole));
-        } else {
-            // Map provided role names to Role objects
-            Set<Role> assignedRoles = new HashSet<>();
-            for (Role role : user.getRoles()) {
-                Role dbRole = roleRepository.findByRole(role.getRole())
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + role.getRole()));
-                assignedRoles.add(dbRole);
-            }
-            user.setRoles(assignedRoles);
-        }
+        // Assign the specified role (User or Seller)
+        Role role = roleRepository.findByRole(roleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+        user.setRoles(Set.of(role));
 
         userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully");
-
-
+        return ResponseEntity.ok(roleName + " registered successfully");
     }
+
+//    public ResponseEntity<?> registerUser(@RequestBody User user) {
+//        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+//            return ResponseEntity.badRequest().body("Email is already in use");
+//        }
+//
+//
+//        // Encrypt the password
+//        user.setPassword(passwordEncoder.encode(user.getPassword()));
+//
+//        // Check if roles are provided; if not, assign ROLE_USER by default
+//        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+//            Role defaultRole = roleRepository.findByRole("ROLE_USER")
+//                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+//            user.setRoles(Set.of(defaultRole));
+//        } else {
+//            // Map provided role names to Role objects
+//            Set<Role> assignedRoles = new HashSet<>();
+//            for (Role role : user.getRoles()) {
+//                Role dbRole = roleRepository.findByRole(role.getRole())
+//                        .orElseThrow(() -> new RuntimeException("Role not found: " + role.getRole()));
+//                assignedRoles.add(dbRole);
+//            }
+//            user.setRoles(assignedRoles);
+//        }
+//
+//        userRepository.save(user);
+//        return ResponseEntity.ok("User registered successfully");
+//
+//
+//    }
 
 
 
@@ -89,4 +107,21 @@ public class UserService {
         return userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    // Update User Profile
+//    public User updateUserProfile(User updatedUser) {
+//        String currentUserEmail = jwtUtil.extractUsernameFromSecurityContext();
+//        User existingUser = userRepository.findByEmail(currentUserEmail)
+//                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+//
+//        existingUser.setName(updatedUser.getName());
+//        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+//            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+//        }
+//        return userRepository.save(existingUser);
+//    }
 }

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -14,26 +13,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        try {
-            userService.registerUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestParam String email, @RequestParam String password) {
-        try {
-            String token = userService.loginUser(email, password);
-            return ResponseEntity.ok().body(token);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed: " + e.getMessage());
-        }
-    }
-
+    // Get User Profile
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {
         try {
@@ -43,4 +23,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
     }
+
+    // Update User Profile
+//    @PutMapping("/profile")
+//    public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser) {
+//        try {
+//            User user = userService.updateUserProfile(updatedUser);
+//            return ResponseEntity.ok().body("Profile updated successfully!");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+//        }
+//    }
 }

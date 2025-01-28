@@ -44,7 +44,7 @@ public class User {
     // Seller-specific fields
 //    private boolean isSeller = false; // Whether the user is a seller
     private String shopName; // Seller's shop name
-    private String gstNumber; // GST number for sellers
+    private String taxNumber; // GST number for sellers
 
     // Admin-specific fields
 //    private boolean isAdmin = false; // Whether the user is an admin
@@ -165,11 +165,11 @@ public class User {
     }
 
     public String getGstNumber() {
-        return gstNumber;
+        return taxNumber;
     }
 
     public void setGstNumber(String gstNumber) {
-        this.gstNumber = gstNumber;
+        this.taxNumber = gstNumber;
     }
 
 //    public boolean isAdmin() {
