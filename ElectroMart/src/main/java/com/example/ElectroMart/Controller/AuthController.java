@@ -30,6 +30,12 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    @RequestMapping(value = "/api/auth/login", method = RequestMethod.GET)
+    public ResponseEntity<String> handleInvalidLoginMethod() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body("Error: Only POST method is allowed for login.");
+    }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
@@ -66,14 +72,19 @@ public class AuthController {
 
 
                 String token =  jwtUtil.generateToken(dbUser.getEmail(), roleNames);
-                return ResponseEntity.ok(Map.of("token", token));
+
+                System.out.println("✅ User Authenticated: " + email);
+                System.out.println("✅ Assigned Roles: " + roleNames);
+                System.out.println("✅ Generated Token: " + token);
+
+                return ResponseEntity.ok(Map.of("token", token, "role", roleNames));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
 
 
         } catch (BadCredentialsException e) {
             // Log and return specific error for bad credentials
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid Email or password");
         } catch (Exception e) {
             // Log and return generic error for other exceptions
             e.printStackTrace();
@@ -95,7 +106,7 @@ public class AuthController {
 //    }
     @PostMapping("/register/user")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        return userService.registerUser(user, "ROLE_USER");
+        return userService.registerUser(user, "ROLE_BUYER");
     }
 
     @PostMapping("/register/seller")

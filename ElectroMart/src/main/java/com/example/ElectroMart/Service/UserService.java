@@ -47,7 +47,7 @@ public class UserService {
 
         // Assign the specified role (User or Seller)
         Role role = roleRepository.findByRole(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                .orElseThrow(() -> new RuntimeException("Role not Found: " + roleName));
         user.setRoles(Set.of(role));
 
         userRepository.save(user);
