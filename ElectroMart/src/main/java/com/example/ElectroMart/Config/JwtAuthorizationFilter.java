@@ -62,11 +62,12 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         try {
             String token = header.replace("Bearer ", "");
 
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(jwtUtil.getSecretKey()) // Use injected JwtUtil to get the key
+            Claims claims = Jwts.parser()  // Use parserBuilder() instead
+                    .setSigningKey(jwtUtil.getSecretKey()) // Correct method to set signing key
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+
 
             String user = claims.getSubject();
 

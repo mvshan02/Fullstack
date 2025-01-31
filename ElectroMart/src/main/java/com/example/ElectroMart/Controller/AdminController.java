@@ -6,14 +6,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
+
 @RequestMapping("/api/admins")
 public class AdminController {
 
     @Autowired
     private AdminService adminService;
 
+
+    // ✅ Admin Login
     @PostMapping("/login")
+
+
     public ResponseEntity<?> loginAdmin(@RequestParam String email, @RequestParam String password) {
         try {
             String token = adminService.loginAdmin(email, password);
@@ -24,6 +30,10 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
+    // ✅ Get Admin Dashboard
+
+
+
     public ResponseEntity<?> getAdminDashboard() {
         try {
             return ResponseEntity.ok(adminService.getAdminDashboard());
@@ -32,7 +42,10 @@ public class AdminController {
         }
     }
 
+    // ✅ Get All Users
     @GetMapping("/users")
+
+
     public ResponseEntity<?> getAllUsers() {
         try {
             return ResponseEntity.ok(adminService.getAllUsers());
@@ -41,7 +54,9 @@ public class AdminController {
         }
     }
 
+    // ✅ Approve User
     @PutMapping("/users/approve/{id}")
+
     public ResponseEntity<?> approveUser(@PathVariable String id) {
         try {
             adminService.approveUser(id);
