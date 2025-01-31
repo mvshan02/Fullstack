@@ -3,7 +3,7 @@ package com.example.ElectroMart.Model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Document(collection = "roles") // This maps the Role class to the "roles" collection in MongoDB
 public class Role {

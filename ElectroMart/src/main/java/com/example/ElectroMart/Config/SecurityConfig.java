@@ -16,7 +16,7 @@ import org.springframework.security.web.firewall.StrictHttpFirewall;
 import java.util.List;
 
 @Configuration
-public class SecurityConfig {
+public class SecurityConfig   {
 
     private final JwtAuthorizationFilter jwtAuthorizationFilter;
 
@@ -54,9 +54,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless REST APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**","/swagger-ui.html","/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html").permitAll() // Public endpoints
+                        .requestMatchers("/api/auth/**","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html" ).permitAll() // Public endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Only Admin can access /api/admin/**
                         .requestMatchers("/api/seller/**").hasRole("SELLER") // Only Seller can access /api/seller/**
                         .requestMatchers("/api/user/**").hasRole("USER") // Only User can access /api/user/**

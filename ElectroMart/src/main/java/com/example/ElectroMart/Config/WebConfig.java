@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // Allow all endpoints
                 .allowedOrigins(
                         "http://localhost:3000", // Development React frontend
-                        "http://localhost:4000" // Alternate React frontend
+                        "http://localhost:5173" // Alternate React frontend
                 )
                 // React's URL
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
