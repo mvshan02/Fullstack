@@ -38,7 +38,7 @@ public class AdminService {
                 .toList();
 
 
-        return jwtUtil.generateToken(admin.getEmail(), roleNames);
+        return jwtUtil.generateToken(admin, roleNames);
     }
 
     public List<User> getAllUsers() {

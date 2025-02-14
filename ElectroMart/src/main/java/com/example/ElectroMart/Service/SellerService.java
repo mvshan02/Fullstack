@@ -58,7 +58,7 @@ public class SellerService {
 
 
 
-        return jwtUtil.generateToken(seller.getEmail(), roleNames);
+        return jwtUtil.generateToken(seller, roleNames);
     }
 
     public void addProduct(Product product) {

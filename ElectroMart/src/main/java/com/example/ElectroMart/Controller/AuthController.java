@@ -71,7 +71,8 @@ public class AuthController {
 
 
 
-                String token =  jwtUtil.generateToken(dbUser.getEmail(), roleNames);
+                String token = jwtUtil.generateToken(dbUser, roleNames);
+
 
                 System.out.println("✅ User Authenticated: " + email);
                 System.out.println("✅ Assigned Roles: " + roleNames);

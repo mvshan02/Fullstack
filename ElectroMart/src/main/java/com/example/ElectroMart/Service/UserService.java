@@ -41,6 +41,10 @@ public class UserService {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email is already in use");
         }
+        // ✅ Ensure userName is provided
+        if (user.getUserName() == null || user.getUserName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required.");
+        }
 
         // Encrypt the password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -99,7 +103,7 @@ public class UserService {
                 .toList();
 
 
-        return jwtUtil.generateToken(user.getEmail(), roleNames);
+        return jwtUtil.generateToken(user, roleNames);
     }
 
     public User getUserProfile() {

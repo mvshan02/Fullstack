@@ -25,7 +25,7 @@ public class User {
     private String email;
 
     @NotEmpty(message = "Password is required")
-    @Size(min = 6, message = "Password must have at least 6 characters")
+    @Size(min = 60, message = "Password must have at least 6 characters")
     private String password;
 
     @NotEmpty(message = "Username is required")
@@ -59,6 +59,11 @@ public class User {
         this.userName = userName;
         this.roles = roles;
     }
+
+//    public  String getName() {
+//        return userName;
+//    }
+
 
     // Getters and Setters
     public String getId() {

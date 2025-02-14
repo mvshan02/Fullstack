@@ -1,5 +1,7 @@
 package com.example.ElectroMart.Security;
 
+
+import com.example.ElectroMart.Model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -18,6 +20,7 @@ import java.util.List;
 @Component
 public class JwtUtil {
 
+
     private final SecretKey secretKey;
     private final long expirationMillis;
 
@@ -28,15 +31,28 @@ public class JwtUtil {
     }
 
     // ✅ Generate a JWT token with roles
-    public String generateToken(String email, List<String> roles) {
-        return Jwts.builder()
-                .subject(email) // ✅ Fix: Use .subject() instead of setSubject()
+    // ✅ Corrected method: Pass a `User` object instead of just `email`
+    public String generateToken(User user, List<String> roles) {
+        String token = Jwts.builder()
+                .subject(user.getEmail())  // ✅ Email as subject
+                .claim("name", user.getUserName())  // ✅ Ensure name is included
                 .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMillis))
-                .signWith(secretKey) // ✅ Fix: No need for SignatureAlgorithm in new version
+                .signWith(secretKey)
                 .compact();
+
+        // ✅ Debugging: Print claims before returning the token
+        System.out.println("JWT Claims:");
+        System.out.println("  - Email (sub): " + user.getEmail());
+        System.out.println("  - Name: " + user.getUserName());  // Check if this prints correctly
+        System.out.println("  - Roles: " + roles);
+        System.out.println("  - Token: " + token);
+
+        return token;
     }
+
+
 
     // ✅ Extract email (subject) from token
     public String extractEmail(String token) {
