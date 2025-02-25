@@ -1,6 +1,5 @@
 package com.example.ElectroMart.Security;
 
-
 import com.example.ElectroMart.Model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -20,70 +19,77 @@ import java.util.List;
 @Component
 public class JwtUtil {
 
-
     private final SecretKey secretKey;
     private final long expirationMillis;
 
-    // Constructor-based initialization
+    // ✅ Constructor: Initialize Secret Key & Expiration
     public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expirationMillis) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)); // ✅ Fix: Correct key usage
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMillis = expirationMillis;
     }
 
-    // ✅ Generate a JWT token with roles
-    // ✅ Corrected method: Pass a `User` object instead of just `email`
+    // ✅ Generate JWT Token with Roles & User ID
     public String generateToken(User user, List<String> roles) {
         String token = Jwts.builder()
-                .subject(user.getEmail())  // ✅ Email as subject
-                .claim("name", user.getUserName())  // ✅ Ensure name is included
-                .claim("roles", roles)
+                .subject(user.getEmail())  // ✅ Set Subject as Email
+                .claim("userId", user.getId()) // ✅ Include User ID
+                .claim("name", user.getUserName()) // ✅ Include Username
+                .claim("roles", roles) // ✅ Include Roles
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(secretKey)
                 .compact();
 
-        // ✅ Debugging: Print claims before returning the token
-        System.out.println("JWT Claims:");
+        // ✅ Debugging: Print Token Details
+        System.out.println("🔐 JWT Token Generated:");
         System.out.println("  - Email (sub): " + user.getEmail());
-        System.out.println("  - Name: " + user.getUserName());  // Check if this prints correctly
+        System.out.println("  - User ID: " + user.getId());
+        System.out.println("  - Name: " + user.getUserName());
         System.out.println("  - Roles: " + roles);
         System.out.println("  - Token: " + token);
 
         return token;
     }
 
-
-
-    // ✅ Extract email (subject) from token
+    // ✅ Extract Email (Subject) from Token
     public String extractEmail(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
-    // ✅ Extract roles from token
+    // ✅ Extract User ID from Token
+    public String extractUserId(String token) {
+        return getClaimsFromToken(token).get("userId", String.class);
+    }
+
+    // ✅ Extract Roles from Token
     public List<String> extractRoles(String token) {
         return getClaimsFromToken(token).get("roles", List.class);
     }
 
-    // ✅ Validate token by checking expiration and subject
+    // ✅ Validate Token: Check Expiration & Subject
     public boolean isTokenValid(String token, String email) {
         return email.equals(extractEmail(token)) && !isTokenExpired(token);
     }
 
-    // ✅ Check if token is expired
+    // ✅ Check If Token is Expired
     private boolean isTokenExpired(String token) {
         return getClaimsFromToken(token).getExpiration().before(new Date());
     }
 
-    // ✅ Parse claims from token (Fixed for JJWT 0.12.5)
+    // ✅ Parse Claims from Token (JJWT 0.12+ Fix)
     private Claims getClaimsFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey) // ✅ Fix: Correct parsing method
-                .build() // ✅ Fix: Add .build()
-                .parseSignedClaims(token) // ✅ Fix: Use parseSignedClaims() instead of parseClaimsJws()
-                .getPayload(); // ✅ Fix: Use getPayload() instead of getBody()
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey) // ✅ Verify with Secret Key
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload(); // ✅ Extract Payload
+        } catch (Exception e) {
+            throw new RuntimeException("❌ Invalid JWT Token: " + e.getMessage());
+        }
     }
 
-    // ✅ Extract username from SecurityContext
+    // ✅ Extract Username from Security Context
     public String extractUsernameFromSecurityContext() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
@@ -92,7 +98,7 @@ public class JwtUtil {
         throw new IllegalStateException("No user is currently authenticated");
     }
 
-    // ✅ Getter for secret key
+    // ✅ Getter for Secret Key
     public SecretKey getSecretKey() {
         return secretKey;
     }

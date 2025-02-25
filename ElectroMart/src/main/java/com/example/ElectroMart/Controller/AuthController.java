@@ -17,7 +17,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
-//@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:5174")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -36,29 +36,23 @@ public class AuthController {
                 .body("Error: Only POST method is allowed for login.");
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-
         try {
-            // Extract login details
             String email = loginRequest.get("email");
             String password = loginRequest.get("password");
-            String requestedRole = loginRequest.get("requestedRole"); // Fix: Extract requested role
+            String requestedRole = loginRequest.get("requestedRole");
 
-            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
 
-
             if (authentication.isAuthenticated()) {
                 User dbUser = userService.getUserByEmail(email);
                 List<String> roleNames = dbUser.getRoles().stream()
-                        .map(Role::getRole) // Extract role names
+                        .map(Role::getRole)
                         .toList();
 
-                // Validate role-based login attempt
                 if ("seller".equalsIgnoreCase(requestedRole) && !roleNames.contains("ROLE_SELLER")) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Error: You are not registered as a seller.");
@@ -69,32 +63,29 @@ public class AuthController {
                             .body("Error: You are not registered as a buyer.");
                 }
 
-
-
                 String token = jwtUtil.generateToken(dbUser, roleNames);
 
-
-                System.out.println("✅ User Authenticated: " + email);
-                System.out.println("✅ Assigned Roles: " + roleNames);
-                System.out.println("✅ Generated Token: " + token);
-
-                return ResponseEntity.ok(Map.of("token", token, "role", roleNames));
+                //  Ensure the response contains userId
+                return ResponseEntity.ok(Map.of(
+                        "token", token,
+                        "role", roleNames,
+                        "userId", dbUser.getId() // 🔹 Ensure userId is returned
+                ));
             }
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
 
-
         } catch (BadCredentialsException e) {
-            // Log and return specific error for bad credentials
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid Email or password");
         } catch (Exception e) {
-            // Log and return generic error for other exceptions
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: Something went wrong");
         }
     }
 
 
-//    @PostMapping("/register")
+
+    //    @PostMapping("/register")
 //    public ResponseEntity<String> register(@Valid @RequestBody User user) {
 //        System.out.println("Received user data: " + user.toString());
 //

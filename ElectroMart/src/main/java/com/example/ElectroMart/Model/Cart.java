@@ -2,7 +2,7 @@ package com.example.ElectroMart.Model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "carts")
@@ -10,9 +10,17 @@ public class Cart {
     @Id
     private String id;
     private String userId;
-    private List<String> productIds; // Store product IDs in the cart
+    private List<CartItem> items; //  Use List<CartItem> instead of Map<String, Integer>
 
-    // Getters and Setters
+    public Cart() {
+        this.items = new ArrayList<>();
+    }
+
+    public Cart(String userId, List<CartItem> items) {
+        this.userId = userId;
+        this.items = items;
+    }
+
     public String getId() {
         return id;
     }
@@ -29,11 +37,11 @@ public class Cart {
         this.userId = userId;
     }
 
-    public List<String> getProductIds() {
-        return productIds;
+    public List<CartItem> getItems() {
+        return items;
     }
 
-    public void setProductIds(List<String> productIds) {
-        this.productIds = productIds;
+    public void setItems(List<CartItem> items) {
+        this.items = items;
     }
 }

@@ -36,6 +36,14 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    public User getUserFromToken(String token) {
+        // ✅ Decode token to extract email
+        String email = jwtUtil.extractEmail(token);
+
+        // ✅ Find user by email
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
     @PostMapping("/api/auth/register")
     public ResponseEntity<?> registerUser(User user, String roleName) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -128,4 +136,13 @@ public class UserService {
 //        }
 //        return userRepository.save(existingUser);
 //    }
+    public User updateUserProfile(User updatedUser) {
+        User existingUser = userRepository.findById(updatedUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        existingUser.setUserName(updatedUser.getUserName());
+        existingUser.setPassword(updatedUser.getPassword()); // Ensure password is hashed if using authentication
+        return userRepository.save(existingUser);
+    }
+
 }

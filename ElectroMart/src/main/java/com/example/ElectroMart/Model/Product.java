@@ -3,16 +3,21 @@ package com.example.ElectroMart.Model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "Products") // Maps to the "products" collection in MongoDB
+@Document(collection = "Products") // Maps to the "Products" collection in MongoDB
 public class Product {
-    @Id
-    private String id; // This field will be used as the MongoDB document ID
+    @Id  //  Ensure this field is correctly mapped to MongoDB
+    private String id;
+
     private String name;
     private double price;
     private String description;
-    private User seller;
+    private String category;
 
-    // Getters and setters
+    private int stock;
+    private String imageUrl;
+    private String categoryTag;
+
+    //  Ensure all getters/setters exist
     public String getId() {
         return id;
     }
@@ -45,7 +50,39 @@ public class Product {
         this.description = description;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public void setSeller(User seller) {
-        this.seller = seller;
+
+    }
+
+    public String getCategoryTag() {
+        return categoryTag;
+    }
+
+    public void setCategoryTag(String categoryTag) {
+        this.categoryTag = categoryTag;
     }
 }

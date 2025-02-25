@@ -15,7 +15,11 @@ public class UserController {
 
     // Get User Profile
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile() {
+    public ResponseEntity<?> getUserProfile(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No user is currently authenticated");
+        }
+
         try {
             User user = userService.getUserProfile();
             return ResponseEntity.ok().body(user);
@@ -24,14 +28,15 @@ public class UserController {
         }
     }
 
-    // Update User Profile
-//    @PutMapping("/profile")
-//    public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser) {
-//        try {
-//            User user = userService.updateUserProfile(updatedUser);
-//            return ResponseEntity.ok().body("Profile updated successfully!");
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
-//        }
-//    }
+
+    //Update User Profile
+  @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser) {
+        try {
+            User user = userService.updateUserProfile(updatedUser);
+            return ResponseEntity.ok().body("Profile updated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
 }
